@@ -30,7 +30,7 @@ jobs:
         cp index.html www/ 2>/dev/null || true
         npm init -y
         npm install @capacitor/core @capacitor/cli
-        npx cap init "Bar Council Prep" "com.barcouncil.app" --web-dir=www --confirm
+        yes | npx cap init "Bar Council Prep" "com.barcouncil.app" --web-dir=www
         npm install @capacitor/android
         npx cap add android
 
