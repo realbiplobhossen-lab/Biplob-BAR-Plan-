@@ -26,11 +26,11 @@ jobs:
 
     - name: Initialize Android App
       run: |
-        mkdir www
-        mv index.html www/
+        mkdir -p www
+        cp index.html www/ 2>/dev/null || true
         npm init -y
         npm install @capacitor/core @capacitor/cli
-        npx cap init "Bar Council Prep" "com.barcouncil.app" --web-dir=www
+        npx cap init "Bar Council Prep" "com.barcouncil.app" --web-dir=www --confirm
         npm install @capacitor/android
         npx cap add android
 
