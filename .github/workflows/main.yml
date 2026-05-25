@@ -37,6 +37,11 @@ jobs:
     - name: Sync App
       run: npx cap sync
 
+    - name: Fix Kotlin Duplicate Dependencies
+      run: |
+        # app লেভেলের build.gradle ফাইলে ডুপ্লিকেট কোটলিন লাইব্রেরি এক্সক্লুড বা বাদ দেওয়ার নিয়ম যোগ করা হচ্ছে
+        sed -i '/dependencies {/a \    modules {\n        module("org.jetbrains.kotlin:kotlin-stdlib-jdk7") { replacedBy("org.jetbrains.kotlin:kotlin-stdlib") }\n        module("org.jetbrains.kotlin:kotlin-stdlib-jdk8") { replacedBy("org.jetbrains.kotlin:kotlin-stdlib") }\n    }' android/app/build.gradle
+
     - name: Build APK
       run: |
         cd android
