@@ -1,0 +1,75 @@
+name: Build Mobile APK
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Source
+      uses: actions/checkout@v4
+
+    - name: Set up NodeJS
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: Setup Java JDK
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '21'
+
+    - name: Initialize Android App
+      run: |
+        mkdir -p www
+        cp index.html www/ 2>/dev/null || true
+        npm init -y
+        npm install @capacitor/core @capacitor/cli
+        yes | npx cap init "Biplob BAR Planner" "com.biplob.barplanner" --web-dir=www
+        npm install @capacitor/android
+        npx cap add android
+
+    - name: Handle and Generate App Icon
+      run: |
+        npm install @capacitor/assets --save-dev
+        
+        # আইকন জেনারেটরের জন্য প্রয়োজনীয় স্ট্রাকচার অটো তৈরি করা হচ্ছে
+        mkdir -p assets
+        
+        if [ -f icon.png ]; then
+          # আপনার আপলোড করা একটি মাত্র ছবিকে ৩টি ফাইলে কপি করে নেওয়া হচ্ছে
+          cp icon.png assets/icon-only.png
+          cp icon.png assets/icon-foreground.png
+          cp icon.png assets/icon-background.png
+          
+          # এবার আইকন জেনারেট করা হবে
+          npx capacitor-assets generate --android
+          echo "আপনার ছবি দিয়ে সফলভাবে আইকন পরিবর্তন করা হয়েছে।"
+        else
+          echo "Error: রিপোজিটরিতে icon.png ফাইলটি খুঁজে পাওয়া যায়নি!"
+          exit 1
+        fi
+
+    - name: Sync App
+      run: npx cap sync
+
+    - name: Fix Kotlin Duplicate Dependencies
+      run: |
+        sed -i '/dependencies {/a \    modules {\n        module("org.jetbrains.kotlin:kotlin-stdlib-jdk7") { replacedBy("org.jetbrains.kotlin:kotlin-stdlib") }\n        module("org.jetbrains.kotlin:kotlin-stdlib-jdk8") { replacedBy("org.jetbrains.kotlin:kotlin-stdlib") }\n    }' android/app/build.gradle
+
+    - name: Build APK
+      run: |
+        cd android
+        ./gradlew assembleDebug
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: Biplob-BAR-Planner-APK
+        path: android/app/build/outputs/apk/debug/app-debug.apk
+        
